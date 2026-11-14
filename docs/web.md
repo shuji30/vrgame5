@@ -46,6 +46,16 @@ BGM は `web/assets/bgm/<曲>.m4a`(AAC-LC、48 kHz・ステレオ)を再生す�
 - 再生時に 2.4 倍する(WAV を音割れしないよう下げて書き出していた名残)
 - `*.m4a` と `*.wav` は Git LFS の対象(`.gitattributes`)
 
+## 効果音
+
+効果音は `web/src/audio.js` で合成している。`web/assets/sfx/<名前>.wav`(無ければ `.m4a`)があれば、合成の代わりにそのファイルを鳴らす。差し替えるときは、同じ名前のファイルを上書きする。消すと合成に戻る。
+
+- `node scripts/render-sfx.mjs [名前 ...]`(`npm start` を動かしておく)で、今の合成を書き出す(44.1 kHz・32 bit float・モノラル)。すでにあるファイルは上書きしない。上書きは `--force`
+- 一発ものの名前は `audio.js` の `SFX` のキー(cannon、explosion、missile など)。強さ(主砲の溜めなど)は音量で、pitch は再生速度で表す
+- ループの素材:`loop-clank`(履帯の板の音。1 秒に 48 枚の速さで作る)、`loop-engine`(ディーゼル。1 秒に 30 回の爆発)、`loop-missile`(ミサイルの噴射)。速さに合わせて再生速度を変えて鳴らすので、この基準の速さに合わせて作る
+- 転輪のゴロゴロ、砂利、超信地の軋み、メカのサーボ、無線のピッは合成のまま(ファイルにはしていない)
+- 音はモノラルで作る(位置に合わせて左右に振るため)
+
 ## 公開(vrgame4 の SKY RUNNER と同じ流れ)
 
 1. `web/src/version.js` の `VERSION` を上げる
