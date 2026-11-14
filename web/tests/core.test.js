@@ -296,3 +296,37 @@ test('ボスの燃えかす:倒すと遮蔽物になり、脱出の穴をふさ�
   sim2.kill(b2, 'p1');
   assert.equal(sim2.obstacles.list.length, m0);
 });
+
+test('ハンコン:ハンドルを中央にしていると、砲塔がゆっくり正面へ戻る(撃った直後は戻らない)', () => {
+  const st = trainingStage();
+  const mk = () => {
+    const sim = new Sim(st, { seed: 3, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+    const me = sim.byId.get('p1');
+    sim.mission.state = 'play';
+    me.drop = 0;
+    me.yaw = Math.PI; // 的のない後ろを向く(照準が敵に合わないように)
+    me.turret = 0.6;
+    return { sim, me };
+  };
+  const run = (sim, cmd, n) => { for (let i = 0; i < n; i++) sim.step(1 / 60, new Map([['p1', { ...cmd }]])); };
+  // 戻る
+  let { sim, me } = mk();
+  run(sim, { turretCenter: true }, 60);
+  assert.equal(me.aim.lock, null);
+  assert.ok(me.turret < 0.6 - 0.2, `戻っていない ${me.turret}`);
+  run(sim, { turretCenter: true }, 240);
+  assert.ok(Math.abs(me.turret) < 1e-6, '正面で止まる');
+  // ハンドルを切っている間は戻らない(速度制御のまま)
+  ({ sim, me } = mk());
+  run(sim, { turretCenter: true, turret: 0.5 }, 30);
+  assert.ok(me.turret > 0.6, '切った向きへ回る');
+  // 頼まれなければ戻らない
+  ({ sim, me } = mk());
+  run(sim, {}, 60);
+  assert.ok(Math.abs(me.turret - 0.6) < 1e-9);
+  // 撃った直後は戻らない
+  ({ sim, me } = mk());
+  me.fireT = 0.35;
+  run(sim, { turretCenter: true }, 60);
+  assert.ok(Math.abs(me.turret - 0.6) < 1e-9, '撃った直後に戻った');
+});
