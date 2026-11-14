@@ -47,3 +47,7 @@ desktop.ini
 # 開発用のスクリーンショット
 .snapshots/
 node_modules/
+
+# 確認用スクリプト(scripts/nettest.mjs)が書き出すスクリーンショット
+/netA.png
+/netB.png

@@ -6,15 +6,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const [url, out = 'snap.png', waitS = '6', evalJs = ''] = process.argv.slice(2);
+// Windows の Chrome / Edge。クラウドの作業環境(Linux)では入っている Chromium を使う。CHROME で指定もできる
 const chromes = [
+  process.env.CHROME,
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  '/opt/pw-browsers/chromium/chrome-linux64/chrome',
+  '/opt/pw-browsers/chromium-1243/chrome-linux64/chrome',
 ];
-const exe = chromes.find((p) => existsSync(p));
+const exe = chromes.find((p) => p && existsSync(p));
 const port = 9300 + Math.floor(Math.random() * 500);
 const prof = mkdtempSync(join(tmpdir(), 'trsnap-'));
 const proc = spawn(exe, [
-  '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, '--window-size=1280,720',
+  '--headless=new', ...(process.platform === 'linux' ? ['--no-sandbox'] : []), `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, '--window-size=1280,720',
   '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required', '--mute-audio', 'about:blank',
 ], { stdio: 'ignore' });
 
