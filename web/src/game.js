@@ -591,7 +591,7 @@ export class Game {
       this.radioT = dur;
       this.app.hud.radio(WHO[r.who] ?? r.who, r.text, dur);
       this.app.audio.radio(true);
-      this.app.audio.speak(r.text, { enabled: this.settings.speech });
+      this.app.audio.speak(r.text, { enabled: this.settings.speech, voice: this.settings.speechVoice });
     }
     this.instT = (this.instT || 0) - dt;
     const objText = sim.mode === 'versus' ? versusText(sim, me) : m.objectives ? `目標 ${m.objectives - m.objectivesLeft}/${m.objectives}` : '';

@@ -213,3 +213,21 @@ test('多脚ボス:近くから膝に向けて撃つと、胴体にさえぎら�
   for (let k = 0; k < 120; k++) sim.updateShots(1 / 60);
   assert.ok(/^k\d$/.test(hits[0] || ''), `膝に当たらない: ${hits[0]}`);
 });
+
+test('読み上げの辞書:履帯などを読みに置き換える(多脚の「脚」は二重に置き換えない)', async () => {
+  const { toSpeech } = await import('../src/audio.js');
+  assert.equal(toSpeech('左の履帯をやられた!'), '左のりたいをやられた!');
+  assert.equal(toSpeech('広場に多脚の制圧戦車がいる。脚の関節が光ってる。'), '広場にたきゃくの制圧戦車がいる。あしの関節が光ってる。');
+  assert.equal(toSpeech('超信地旋回で曲射'), 'ちょうしんちせんかいできょくしゃ');
+});
+
+test('読み上げの声:男性の声があれば選び、なければ女性の声を低くする', async () => {
+  const { pickVoice } = await import('../src/audio.js');
+  const v = (name, lang = 'ja-JP') => ({ name, lang });
+  const list = [v('Microsoft Haruka - Japanese (Japan)'), v('Microsoft Ichiro - Japanese (Japan)'), v('Google US English', 'en-US')];
+  assert.equal(pickVoice(list, 'male').voice.name, 'Microsoft Ichiro - Japanese (Japan)');
+  assert.equal(pickVoice(list, 'female').voice.name, 'Microsoft Haruka - Japanese (Japan)');
+  const noMale = pickVoice([v('Google 日本語')], 'male');
+  assert.equal(noMale.voice.name, 'Google 日本語');
+  assert.ok(noMale.pitch < 1);
+});
