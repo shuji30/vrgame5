@@ -4,7 +4,7 @@
 
 - 公開先:https://shuji30.github.io/vrgame2/games/tread-revolt/ (選択画面 https://shuji30.github.io/vrgame2/ の4番目)
 - 対象:PC の Chrome / Edge(デスクトップ)、PCVR(OpenXR。Pimax 8KX で確認する前提)
-- ハンコン:vrgame2 の ffb-bridge を起動しておく。`https://shuji30.github.io` と `http://localhost:8090` はブリッジの既定の許可リストに入っている
+- ハンコン:vrgame2 の ffb-bridge を起動しておく。設定画面の「ハンコン」から ZIP(vrgame4 と同じ `vrgame2/downloads/ffb-bridge.zip`)をダウンロードできる。`https://shuji30.github.io` と `http://localhost:8090` はブリッジの既定の許可リストに入っている
 
 ## 入っているもの
 
