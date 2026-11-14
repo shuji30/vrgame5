@@ -91,7 +91,7 @@ BGM は `web/assets/bgm/<曲>.m4a`(AAC-LC、48 kHz・ステレオ)を再生す�
 ホスト・クライアント方式。ホストが敵・命中・撃破・ミッションの判定を持ち、15Hz で状態を配る。自分の車両は各自が動かして送り、弾の発射はイベントで送る。
 
 - つなぎ方:WebRTC のデータチャネル。接続の仲介だけ PeerJS の公開サーバー(0.peerjs.com)を使う
-- 中継(TURN):Cloudflare Realtime の TURN を使えるようにしてある(`web/src/net/ice.js` と `cloudflare/turn-worker/`、手順は `docs/cloudflare-turn.md`)。`TURN_URL` が空のときや合言葉を取れないときは PeerJS の既定(Google の STUN と、PeerJS 運営の無保証の TURN)。URL に `?turn=<Worker の URL>` を付けるとその場で試せる
+- 中継(TURN):Metered の Open Relay を使う(`web/src/net/ice.js`、手順は `docs/turn.md`)。Cloudflare Realtime の TURN にも切り替えられる(`cloudflare/turn-worker/`)。`TURN_URL` が空のときや合言葉を取れないときは PeerJS の既定(Google の STUN と、PeerJS 運営の無保証の TURN)。URL に `?turn=<Worker の URL>` を付けるとその場で試せる
 - 「同じPCで試す」をオンにすると、同じブラウザのタブ同士で BroadcastChannel でつながる(1台で確かめる用)
 - vrgame4 のランキングに使っていた Supabase のプロジェクトはなくなっていた(2026-11-14 に確認)ので使っていない
 

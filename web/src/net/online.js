@@ -140,7 +140,7 @@ export class Online {
     if (this.state === 'idle') {
       el.innerHTML = `<h2>オンライン(ルームコード)</h2>
         <p class="note">ホストがルームを作り、4文字のコードを仲間に伝える。仲間はコードを入れて参加する。協力ミッションは2〜4人、対戦は1vs1〜4vs4(空いた席はボット)。<br>
-        つなぎ方は WebRTC(接続の仲介だけ PeerJS の公開サーバーを使う)。${hasTurn() ? '直接つながらない回線では Cloudflare の TURN で中継する。' : '回線によってはつながらないことがある。'}<br>
+        つなぎ方は WebRTC(接続の仲介だけ PeerJS の公開サーバーを使う)。${hasTurn() ? '直接つながらない回線では TURN(Metered の Open Relay)で中継する。' : '回線によってはつながらないことがある。'}<br>
         「同じPCで試す」をオンにすると、同じブラウザのタブ同士でつながる(1台で確かめる用)。</p>
         <label class="field"><span>名前</span><input type="text" id="on-name" value="${esc(settings.name)}" maxlength="12"><span></span></label>
         <label class="field"><span>同じPCで試す(タブ同士)</span><input type="checkbox" id="on-local" ${this.local ? 'checked' : ''}><span></span></label>
