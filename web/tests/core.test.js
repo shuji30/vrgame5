@@ -5,6 +5,7 @@ import { Sim } from '../src/core/sim.js';
 import { campaignStage, STAGE_COUNT, STAGE_INFO, trainingStage, arenaStage, ARENA_LIST } from '../src/core/stages.js';
 import { solvePitch, G, lobSpeed, LOB_ANGLE, LOB_G, spreadDeg } from '../src/core/ballistics.js';
 import { wheelToActions, defaultWheelConfig } from '../src/core/tankmap.js';
+import { mapSteer } from '../src/core/inputmap.js';
 import { FfbModel } from '../src/core/ffbmodel.js';
 
 const run = (sim, sec, cmd = {}) => {
@@ -230,4 +231,36 @@ test('読み上げの声:男性の声があれば選び、なければ女性の�
   const noMale = pickVoice([v('Google 日本語')], 'male');
   assert.equal(noMale.voice.name, 'Google 日本語');
   assert.ok(noMale.pitch < 1);
+});
+
+test('ハンコン:効く角度 180°(左右 90°)を超えて回すと beyond が 1 を超える', () => {
+  const cal = { ...defaultWheelConfig().steer };
+  assert.equal(cal.lockDeg, 180);
+  assert.equal(cal.wheelDeg, 900);
+  const raw = (deg) => deg / 450; // 900° のハンドルで片側 450° が raw 1
+  assert.ok(mapSteer(raw(80), cal).beyond < 1);
+  assert.ok(Math.abs(mapSteer(raw(90), cal).beyond - 1) < 1e-9);
+  assert.ok(mapSteer(raw(95), cal).beyond > 1);
+  assert.ok(mapSteer(raw(-95), cal).beyond > 1);
+  assert.equal(mapSteer(raw(95), cal).value, 1);
+});
+
+test('FFB:ソフトロックは効く角度を超えたときだけ、旋回限界と同じ向き(中央向き)に押し返す', () => {
+  const base = { dt: 0.016, speed01: 0, rough: 0, roadHz: 14, turretWeight: 0.2, turretLimit: 0 };
+  const f = new FfbModel({ gain: 0.2 });
+  // 効く角度の内側では何もしない
+  assert.equal(f.update({ ...base, steerBeyond: 0.9, steerSign: 1 }).c, 0);
+  assert.equal(f.update({ ...base, steerBeyond: 1, steerSign: 1 }).c, 0);
+  // 右に回し過ぎ:右の旋回限界(turretLimit −1。右に切ると砲塔は右 = 負へ回る)と同じ向き
+  const limitR = Math.sign(new FfbModel({ gain: 0.2 }).update({ ...base, turretLimit: -1 }).c);
+  const r = f.update({ ...base, steerBeyond: 1.2, steerSign: 1 }).c;
+  assert.equal(Math.sign(r), limitR);
+  assert.ok(Math.abs(r) >= 0.8 - 1e-9, 'ゲインが低くても弱めすぎない');
+  const l = f.update({ ...base, steerBeyond: 1.2, steerSign: -1 }).c;
+  assert.equal(Math.sign(l), -limitR);
+  // 数度(5°/90° ≈ 0.056)超えたところで、もうはっきり効く
+  assert.ok(Math.abs(f.update({ ...base, steerBeyond: 1 + 5 / 90, steerSign: 1 }).c) > 0.3);
+  // softLock 0 で無効
+  const off = new FfbModel({ softLock: 0 });
+  assert.equal(off.update({ ...base, steerBeyond: 1.5, steerSign: 1 }).c, 0);
 });
