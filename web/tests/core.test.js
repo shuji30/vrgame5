@@ -354,3 +354,31 @@ test('曲射:目標が砲塔の向きから 10° 以内なら、向きを吸い�
   for (let i = 0; i < 400; i++) sim.step(1 / 60, new Map([['p1', {}]]));
   assert.ok(L.hp < hp0, '外れた');
 });
+
+test('歩行メカ:主砲のボタンで、拳の届く所の敵は炸薬パンチで殴る(遠ければ主砲)', () => {
+  const sim = new Sim(campaignStage(0), { seed: 4, players: [{ id: 'p1', vehicle: 'mech', ctrl: 'local' }] });
+  run(sim, 4); // 降下して着地するまで
+  const me = sim.byId.get('p1');
+  me.invuln = 999;
+  const foe = sim.ents.find((e) => e.type === 'lightTank' && e.alive);
+  for (const e of sim.ents) if (e.team === 1 && e !== foe) { e.alive = false; e.hidden = true; }
+  foe.ai.state = 'sleep';
+  me.yaw = 0; me.turret = 0;
+  foe.x = me.x; foe.z = me.z + 5.5; foe.y = me.y;
+  const hp0 = foe.hp;
+  sim.events.length = 0;
+  const evs = [];
+  const step = (cmd, n = 1) => { for (let i = 0; i < n; i++) { sim.step(1 / 60, new Map([['p1', { ...cmd }]])); evs.push(...sim.events); sim.events.length = 0; } };
+  step({ fire: true }); step({}, 20);
+  assert.ok(evs.some((e) => e.t === 'punch'), 'パンチした');
+  assert.ok(!evs.some((e) => e.t === 'fire' && e.kind === 'cannon'), '近くでは主砲を撃たない');
+  assert.ok(foe.hp < hp0 - 50 || !foe.alive, `当たっていない ${foe.hp}`);
+  // 遠い敵には主砲
+  const sim2 = new Sim(campaignStage(0), { seed: 4, players: [{ id: 'p1', vehicle: 'mech', ctrl: 'local' }] });
+  run(sim2, 4);
+  sim2.events.length = 0;
+  const ev2 = [];
+  sim2.step(1 / 60, new Map([['p1', { fire: true }]])); ev2.push(...sim2.events);
+  assert.ok(!ev2.some((e) => e.t === 'punch'));
+  assert.ok(ev2.some((e) => e.t === 'fire' && e.kind === 'cannon'));
+});
