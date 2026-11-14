@@ -4,6 +4,7 @@ import { GameAudio } from './audio.js';
 import { FfbBridge } from './input/bridge.js';
 import { InputManager } from './input/input.js';
 import { XrControls } from './input/xr.js';
+import { TouchControls, isTouchDevice } from './input/touch.js';
 import { Hud } from './hud.js';
 import { Game } from './game.js';
 import { buildVehicle } from './scene/models.js';
@@ -20,9 +21,10 @@ const params = new URLSearchParams(location.search);
 const SETTINGS_KEY = 'treadrevolt:settings';
 const PROGRESS_KEY = 'treadrevolt:progress';
 
+const TOUCH = isTouchDevice();
 const DEFAULT_SETTINGS = {
   difficulty: 'normal', vehicle: 'medium', scheme: 'tracks', manualPitch: false, mouseSens: 1,
-  vignette: 0.6, snapTurn: false, horizon: false, comfortTurn: 1, shadows: true,
+  vignette: 0.6, snapTurn: false, horizon: false, comfortTurn: 1, shadows: !TOUCH, // スマホは影を切って軽くする
   master: 0.8, sfx: 0.9, music: 0.35, speech: false, speechVoice: 'male',
   vrScale: 0.8, turretRange: 90, sortieVR: false, simhub: true, paint: 0, ffb: true, ffbInvert: true, ffbGain: 0.8, ffbSpring: 0.45, xrMode: 'sticks', turretHead: true, wheelOffset: { x: 0, y: 0, z: 0 }, name: 'PLAYER',
 };
@@ -38,7 +40,7 @@ function save(k, v) {
 
 // ------------------------------------------------------------ 描画とサブシステム
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('snap') });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.5 : 2)); // スマホは解像度を少し下げて軽くする
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -52,6 +54,7 @@ const audio = new GameAudio();
 const bridge = new FfbBridge();
 bridge.start();
 const input = new InputManager(bridge);
+if (TOUCH) input.touch = new TouchControls();
 const hud = new Hud($('#hud'));
 const xr = new XrControls(renderer);
 const app = { renderer, audio, input, bridge, settings, hud, xr, onEnd: null, onPause: null, net: null };
@@ -61,6 +64,7 @@ applySettings();
 
 function applySettings() {
   input.settings.scheme = settings.scheme;
+  input.touch?.setScheme(settings.scheme);
   input.settings.manualPitch = settings.manualPitch;
   input.settings.mouseSens = settings.mouseSens;
   xr.mode = settings.xrMode;
@@ -235,7 +239,11 @@ function beginNow(cfg) {
   playing = true;
   // シェーダーを先に作っておく(最初の爆発や被弾で止まらないように)
   try { renderer.compile(game.scene, game.camera); } catch { /* 無視 */ }
-  if (!renderer.xr.isPresenting && !params.has('nolock')) renderer.domElement.requestPointerLock?.()?.catch?.(() => {});
+  if (!renderer.xr.isPresenting && !params.has('nolock') && !TOUCH) renderer.domElement.requestPointerLock?.()?.catch?.(() => {});
+  // スマホ:全画面・横向きにする(できない端末では何もしない)
+  if (TOUCH && !document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.()?.then(() => screen.orientation?.lock?.('landscape'))?.catch?.(() => {});
+  }
 }
 
 function startCampaign(index) {
@@ -704,6 +712,7 @@ function loop(t) {
   learnTick(dt);
   if ((menuT += dt) > 0.1) { menuT = 0; meterTick(); }
   const inXR = renderer.xr.isPresenting;
+  input.touch?.setVisible(!inXR && playing && game.running && current === 'game' && !game.paused);
   if (playing && game.running && current === 'game') {
     game.frame(dt);
     attachVrMenu(null);
