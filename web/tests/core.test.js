@@ -183,19 +183,27 @@ test('ボス:決まった手順で倒せる', async () => {
   }
 });
 
-test('主砲は砲身2本:左右交互に2連射し、撃ち切ったら2本まとめて装填', () => {
+test('主砲は砲身2本:左右交互に2連射し、1 発ずつ装填する(ゲージが半分で 1 発撃てる)', () => {
   const sim = new Sim(trainingStage(), { mode: 'training' });
   run(sim, 3);
   const p = sim.byId.get('p1');
+  const per = p.spec.reload * 0.7; // 1 発ぶんの装填時間(2 発で reload×1.4)
   let shots = 0;
-  const fireFor = (sec) => { for (let i = 0; i < sec * 60; i++) { sim.step(1 / 60, new Map([['p1', { fire: true }]])); shots += sim.events.filter((e) => e.t === 'fire' && e.id === 'p1' && e.kind === 'cannon').length; sim.events.length = 0; } };
-  fireFor(0.5);
+  const step = (sec, fire) => { for (let i = 0; i < Math.round(sec * 60); i++) { sim.step(1 / 60, new Map([['p1', { fire }]])); shots += sim.events.filter((e) => e.t === 'fire' && e.id === 'p1' && e.kind === 'cannon').length; sim.events.length = 0; } };
+  step(0.5, true);
   assert.equal(shots, 2, '0.5 秒で 2 発');
   assert.equal(p.ammo, 0);
-  fireFor(2);
-  assert.equal(shots, 2, '装填中は撃てない');
-  fireFor(p.spec.reload * 1.4);
-  assert.ok(shots >= 3, '装填が終わるとまた撃てる');
+  step(per - 0.6, true);
+  assert.equal(shots, 2, '1 発ぶんの装填が終わるまでは撃てない');
+  step(0.3, false);
+  assert.equal(p.ammo, 1, '1 発ぶんで 1 発撃てる');
+  step(1 / 60, true);
+  assert.equal(shots, 3);
+  // 撃たずに待てば、2 発までたまる
+  step(per * 2 + 0.2, false);
+  assert.equal(p.ammo, 2);
+  step(0.5, true);
+  assert.equal(shots, 5);
 });
 
 test('多脚ボス:近くから膝に向けて撃つと、胴体にさえぎられず膝に当たる', () => {
@@ -329,4 +337,20 @@ test('ハンコン:ハンドルを中央にしていると、砲塔がゆっく�
   me.fireT = 0.35;
   run(sim, { turretCenter: true }, 60);
   assert.ok(Math.abs(me.turret - 0.6) < 1e-9, '撃った直後に戻った');
+});
+
+test('曲射:目標が砲塔の向きから 10° 以内なら、向きを吸いつけて当たる(VR で頭の向きが少しずれても)', async () => {
+  const { yawTo, DEG } = await import('../src/core/util.js');
+  const sim = new Sim(campaignStage(1), { seed: 9, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  const me = sim.byId.get('p1');
+  sim.mission.state = 'play'; me.drop = 0; me.invuln = 999;
+  for (const e of sim.ents) if (e.team === 1 && e.type !== 'launcher') { e.alive = false; e.hidden = true; }
+  const L = sim.ents.find((e) => e.type === 'launcher');
+  L.hidden = false; L.rise = 1; L.trigger = null;
+  me.x = L.x + 20; me.z = L.z - 95; me.yaw = 0;
+  me.turret = yawTo(me.x, me.z, L.x, L.z) + 8 * DEG;
+  const hp0 = L.hp;
+  for (let i = 0; i < 300; i++) sim.step(1 / 60, new Map([['p1', { lob: true, fire: me.wheelie > 0.6 && i % 30 === 0 }]]));
+  for (let i = 0; i < 400; i++) sim.step(1 / 60, new Map([['p1', {}]]));
+  assert.ok(L.hp < hp0, '外れた');
 });
