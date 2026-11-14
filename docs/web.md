@@ -74,6 +74,8 @@ BGM は `web/assets/bgm/<曲>.m4a`(AAC-LC、48 kHz・ステレオ)を再生す�
 1. `web/src/version.js` の `VERSION` を上げる
 2. vrgame2 を `git pull` してから `node scripts/publish.mjs`(vrgame2 の `games/tread-revolt/` へコピー。プログラムは毎回ちがう名前の `js-*/` に置き、GitHub Pages のキャッシュで新旧が混ざらないようにする)
 3. vrgame2 で `npm test` → commit → push
+
+`js-*/` は直前の 2 つまで残す(新しさはフォルダ名の末尾の時刻で決める)。Git LFS の実体を取っていないクローン(クラウドの作業環境など)では音のファイルがポインタになっているので、それは写さず公開先のものを残す。
 4. `https://shuji30.github.io/vrgame2/games/tread-revolt/version.json` で反映を確かめる
 
 ## オンライン
