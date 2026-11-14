@@ -264,3 +264,13 @@ test('FFB:ソフトロックは効く角度を超えたときだけ、旋回限�
   const off = new FfbModel({ softLock: 0 });
   assert.equal(off.update({ ...base, steerBeyond: 1.5, steerSign: 1 }).c, 0);
 });
+
+test('移動要塞:甲板の砲塔と迫撃砲を壊すほど遅くなる', async () => {
+  const { BOSSES, haulerSpeedK } = await import('../src/core/boss.js');
+  const e = { parts: BOSSES.hauler.parts() };
+  assert.equal(haulerSpeedK(e), 1);
+  e.parts.find((p) => p.name === 't1').alive = false;
+  assert.ok(Math.abs(haulerSpeedK(e) - 0.87) < 1e-9);
+  for (const p of e.parts) if (!p.core) p.alive = false;
+  assert.ok(Math.abs(haulerSpeedK(e) - 0.38) < 1e-9);
+});
