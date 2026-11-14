@@ -274,3 +274,25 @@ test('移動要塞:甲板の砲塔と迫撃砲を壊すほど遅くなる', asyn
   for (const p of e.parts) if (!p.core) p.alive = false;
   assert.ok(Math.abs(haulerSpeedK(e) - 0.38) < 1e-9);
 });
+
+test('ボスの燃えかす:倒すと遮蔽物になり、脱出の穴をふさぐ位置では当たり判定を足さない', () => {
+  const st = campaignStage(2); // 1-B 移動要塞
+  const sim = new Sim(st, { seed: 5, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  const boss = sim.ents.find((e) => e.type === 'boss');
+  boss.x = 60; boss.z = 40; boss.yaw = 0.4;
+  const n0 = sim.obstacles.list.length;
+  sim.kill(boss, 'p1');
+  assert.equal(sim.obstacles.list.length, n0 + 1);
+  const w = sim.obstacles.list.at(-1);
+  assert.equal(w.kind, 'bossWreck');
+  assert.ok(sim.obstacles.pointHit(60, sim.terrain.height(60, 40) + 1.5, 40), '弾を止める');
+  const pos = { x: 60, z: 40 };
+  assert.ok(sim.obstacles.pushOut(pos, 2.4), '車両を押し出す');
+  // 脱出の穴の上で倒したとき
+  const sim2 = new Sim(st, { seed: 5, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  const b2 = sim2.ents.find((e) => e.type === 'boss');
+  b2.x = sim2.exit.x; b2.z = sim2.exit.z + 5;
+  const m0 = sim2.obstacles.list.length;
+  sim2.kill(b2, 'p1');
+  assert.equal(sim2.obstacles.list.length, m0);
+});
