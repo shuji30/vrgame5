@@ -14,7 +14,7 @@ import { WHEEL_ACTIONS, defaultWheelConfig } from './core/tankmap.js';
 import { detectChange } from './core/inputmap.js';
 import { Tutorial } from './tutorial.js';
 import { Online } from './net/online.js';
-import { loadBuildInfo } from './version.js';
+import { loadBuildInfo, VERSION } from './version.js';
 
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.search);
@@ -276,7 +276,12 @@ function quit() {
 app.onPause = (on) => {
   if (!playing) return;
   game.paused = on;
-  if (on) { show('pause', false); document.exitPointerLock?.(); bridge.stopForces(); }
+  if (on) {
+    // ポーズした瞬間の入力の状態(勝手に動く原因を確かめるため)。タッチの状態はこのあと離した状態に戻る
+    const info = $('#pause-input');
+    if (info) info.textContent = `v${VERSION}\n${input.describe()}`;
+    show('pause', false); document.exitPointerLock?.(); bridge.stopForces();
+  }
   else resume();
 };
 function resume() {
