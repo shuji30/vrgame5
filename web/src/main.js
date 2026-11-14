@@ -265,6 +265,7 @@ function startVersus() {
 
 function quit() {
   playing = false;
+  checkUpdate(); // メニューへ戻ったときに新しい版が出ていれば読み込み直す
   game.stop();
   hud.show(false);
   document.exitPointerLock?.();
@@ -792,6 +793,26 @@ setMenuVehicle(settings.vehicle);
 $('#loading').hidden = true;
 $('#title-note').innerHTML = '推奨:PC の Chrome / Edge。VR は PCVR(OpenXR)。ハンコンは vrgame2 の ffb-bridge を起動しておく。<br><span id="ver"></span>';
 loadBuildInfo().then((t) => { $('#ver').textContent = t; });
+
+// 古い版のまま遊び続けないようにする:公開されている版(version.json)がこのプログラムと違えば読み込み直す。
+// ブラウザが古い index.html を使い続けることがある(開いたままのタブを戻したときなど)。遊んでいる最中は読み込み直さない
+let updating = false;
+async function checkUpdate() {
+  if (updating || playing) return;
+  try {
+    const r = await fetch(`./version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) return; // 手元で開いたとき(version.json がない)
+    const v = (await r.json()).version;
+    if (!v || v === VERSION) return;
+    const u = new URL(location.href);
+    if (u.searchParams.get('v') === v) return; // 読み込み直しても変わらない(公開の途中など)。繰り返さない
+    updating = true;
+    u.searchParams.set('v', v);
+    location.replace(u.toString());
+  } catch { /* つながらない */ }
+}
+checkUpdate();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
 audio.playMusic('title');
 if (params.has('stage')) {
   pending = { mode: 'campaign', stageIndex: Number(params.get('stage')) };
