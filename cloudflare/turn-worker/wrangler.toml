@@ -1,0 +1,10 @@
+# wrangler で配る場合の設定(ダッシュボードに worker.js を貼り付けるなら不要)
+#   npx wrangler deploy
+#   npx wrangler secret put TURN_KEY_API_TOKEN
+name = "treadrevolt-turn"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://shuji30.github.io,http://localhost:8090"
+# TURN_KEY_ID もここか、ダッシュボードの「変数」に入れる
