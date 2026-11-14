@@ -30,7 +30,7 @@ try { commit = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root
 const jsDir = `js-${commit ? `${commit}-` : ''}${Date.now().toString(36)}`;
 cpSync(join(web, 'src'), join(dst, jsDir), { recursive: true });
 cpSync(join(web, 'vendor'), join(dst, 'vendor'), { recursive: true });
-// BGM(scripts/render-bgm.mjs で書き出した WAV)
+// BGM(web/assets/bgm/<曲>.m4a)
 if (existsSync(join(web, 'assets'))) cpSync(join(web, 'assets'), join(dst, 'assets'), { recursive: true });
 const html = readFileSync(join(web, 'index.html'), 'utf8');
 if (!html.includes('./src/main.js')) throw new Error('index.html に ./src/main.js が見つかりません');

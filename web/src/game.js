@@ -100,7 +100,7 @@ export class Game {
     this.radioQ = [];
     this.radioT = 0;
     this.app.hud.reset();
-    this.app.audio.playMusic(cfg.stage.music || 'area1');
+    this.app.audio.playMusic(cfg.stage.music || 'area1', cfg.stage.musicFallback);
     this.app.audio.jingle('start');
     this.app.audio.setInterior(true);
     this.bossShown = false;

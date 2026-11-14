@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Sim } from '../src/core/sim.js';
-import { campaignStage, STAGE_COUNT, trainingStage, arenaStage, ARENA_LIST } from '../src/core/stages.js';
+import { campaignStage, STAGE_COUNT, STAGE_INFO, trainingStage, arenaStage, ARENA_LIST } from '../src/core/stages.js';
 import { solvePitch, G, lobSpeed, LOB_ANGLE, LOB_G, spreadDeg } from '../src/core/ballistics.js';
 import { wheelToActions, defaultWheelConfig } from '../src/core/tankmap.js';
 import { FfbModel } from '../src/core/ffbmodel.js';
@@ -195,4 +195,21 @@ test('主砲は砲身2本:左右交互に2連射し、撃ち切ったら2本ま�
   assert.equal(shots, 2, '装填中は撃てない');
   fireFor(p.spec.reload * 1.4);
   assert.ok(shots >= 3, '装填が終わるとまた撃てる');
+});
+
+test('多脚ボス:近くから膝に向けて撃つと、胴体にさえぎられず膝に当たる', () => {
+  const i = STAGE_INFO.findIndex((s) => s.id === '2-B');
+  const sim = new Sim(campaignStage(i), { mode: 'campaign' });
+  run(sim, 4);
+  const p = sim.byId.get('p1');
+  const b = sim.ents.find((e) => e.type === 'boss');
+  b.x = 0; b.z = 40; b.yaw = Math.PI;
+  p.x = 0; p.z = 10; p.yaw = 0; p.turret = 14 * Math.PI / 180; p.spread = 0;
+  for (let k = 0; k < 120; k++) sim.computeAim(p, false);
+  const hits = [];
+  const oe = sim.emit.bind(sim);
+  sim.emit = (ev) => { if (ev.t === 'hitPart' || ev.t === 'ricochet') hits.push(ev.part || 'body'); return oe(ev); };
+  sim.fireMain(p);
+  for (let k = 0; k < 120; k++) sim.updateShots(1 / 60);
+  assert.ok(/^k\d$/.test(hits[0] || ''), `膝に当たらない: ${hits[0]}`);
 });

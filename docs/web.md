@@ -37,14 +37,14 @@ npm test       # 中核ロジックのテスト(node --test)
 - `node scripts/snap.mjs "<url>" out.png [秒] [JS]` … ヘッドレス Chrome で開いて、コンソールのエラーとスクリーンショットを取る
 - `node scripts/nettest.mjs` … 2つのタブを「同じPCで試す」でつなぎ、オンラインの同期を確かめる
 
-## BGM(WAV)
+## BGM
 
-BGM は `web/src/music.js` の合成を、`node scripts/render-bgm.mjs`(`npm start` を動かしておく)で WAV に書き出したもの(`web/assets/bgm/<曲>.wav`、44.1 kHz・16 bit・ステレオ、つなぎ目なしの 1 周)を再生する。読み込むまでは合成で鳴らす。曲を変えたら書き出し直す。
+BGM は `web/assets/bgm/<曲>.m4a`(AAC-LC、48 kHz・ステレオ)を再生する。読み込むまでは `web/src/music.js` の合成で鳴らす。曲の id は title / training / area1〜4 / boss / versus。
 
-- 曲は 16 小節で 1 周し、最初の 1 周だけ前奏があるので、3 周分を計算して残響の入った 2 周目を切り出す
-- 一度に全部の音を予約すると音が抜けるので、2 秒ずつ計算を止めて先の音を予約する
-- 音割れしないようピークを 0.98 に下げて書き出し、再生時に 2.4 倍で合成のときの大きさに戻す
-- vrgame5 では `*.wav` は Git LFS の対象(`.gitattributes`)
+- `<曲>.m4a` が無ければ `<曲>.wav` を探す。`node scripts/render-bgm.mjs`(`npm start` を動かしておく)で合成の曲を WAV に書き出せる(今は使っていない)
+- 対戦のアリーナは `arena1〜4`(ARENA_LIST の順)を探し、無ければ `versus` を流す
+- 再生時に 2.4 倍する(WAV を音割れしないよう下げて書き出していた名残)
+- `*.m4a` と `*.wav` は Git LFS の対象(`.gitattributes`)
 
 ## 公開(vrgame4 の SKY RUNNER と同じ流れ)
 
