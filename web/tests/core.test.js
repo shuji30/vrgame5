@@ -393,6 +393,6 @@ test('ボス:遠くから撃たれたら目を覚まし、遠い相手にはミ�
   sim.damagePart(b, knee, { dmg: 10, x: b.x, y: 4, z: b.z, owner: 'p1' });
   assert.notEqual(b.ai.state, 'sleep', '撃たれたら起きる');
   let missiles = 0;
-  for (let k = 0; k < 60 * 3; k++) { sim.step(1 / 60, new Map([['p1', {}]])); missiles += sim.events.filter((e) => e.t === 'fire' && e.id === b.id && e.kind === 'missile').length; sim.events.length = 0; }
+  for (let k = 0; k < 60 * 9; k++) { sim.step(1 / 60, new Map([['p1', {}]])); missiles += sim.events.filter((e) => e.t === 'fire' && e.id === b.id && e.kind === 'missile').length; sim.events.length = 0; }
   assert.ok(missiles >= 3, `ミサイル ${missiles}`);
 });

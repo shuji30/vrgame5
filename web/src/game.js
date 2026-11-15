@@ -554,6 +554,8 @@ export class Game {
     const au = this.app.audio;
     const me = this.me;
     for (const ev of sim.events) {
+      // 1 つの出来事の処理でエラーが出ても、ほかの出来事とゲームは止めない(描画ループが止まって固まるため)
+      try {
       this.app.net?.onEvent?.(ev, this);
       if (this.tutorial) (this.tutorialEvents ||= []).push(ev);
       const mine = ev.id === me.id;
@@ -689,6 +691,7 @@ export class Game {
           break;
         default: break;
       }
+      } catch (err) { this.app.reportError?.(err, `出来事 ${ev.t}`); }
     }
     sim.events.length = 0;
   }
