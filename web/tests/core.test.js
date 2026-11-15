@@ -396,3 +396,19 @@ test('ボス:遠くから撃たれたら目を覚まし、遠い相手にはミ�
   for (let k = 0; k < 60 * 9; k++) { sim.step(1 / 60, new Map([['p1', {}]])); missiles += sim.events.filter((e) => e.t === 'fire' && e.id === b.id && e.kind === 'missile').length; sim.events.length = 0; }
   assert.ok(missiles >= 3, `ミサイル ${missiles}`);
 });
+
+test('曲射:車体が立ち上がる前に主砲を押しても、立った時点で撃つ(押したことを捨てない)', () => {
+  const sim = new Sim(campaignStage(0), { seed: 2, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  run(sim, 4);
+  const me = sim.byId.get('p1');
+  me.invuln = 999;
+  sim.events.length = 0;
+  let lobs = 0;
+  for (let i = 0; i < 90; i++) {
+    // 曲射を押し始めた最初のフレームだけ主砲を押す(車体はまだ立っていない)
+    sim.step(1 / 60, new Map([['p1', { lob: true, fire: i === 0 }]]));
+    lobs += sim.events.filter((e) => e.t === 'fire' && e.id === 'p1' && e.kind === 'lob').length;
+    sim.events.length = 0;
+  }
+  assert.equal(lobs, 1);
+});
