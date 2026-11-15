@@ -330,7 +330,6 @@ export class Game {
       this.dioramaPos = null;
       this.seat.scale.setScalar(1);
       let eye = spec.eye;
-      if (spec.body === 'mech') eye -= me.crouch * 2.2;
       if (view === 'hatch') eye = spec.height + 1.25;
       // VR のコックピット:砲塔の付け根より少し下(車内)。砲身が目線の上で回る
       if (inXR && view === 'cockpit' && ownModel?.turretBase && spec.body === 'tank') eye = ownModel.turretBase - 0.2;
