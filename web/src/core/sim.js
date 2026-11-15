@@ -12,6 +12,8 @@ import { G, LOB_G, LOB_ANGLE, lobSpeed, lobRange, LOB_MIN, LOB_MAX, solvePitch, 
 const LOB_YAW_ASSIST = 10 * DEG; // 曲射の向きを目標へ吸いつける角度
 // 戦車の主砲の 1 発ぶんの装填時間(2 発で reload×1.4。以前の「撃ち切ってから 2 発まとめて」と同じ)
 const shellReload = (e) => e.spec.reload * 0.7;
+// 曲射の威力(主砲 1 発の何倍か)。2 発ぶんを使うので、2 発分を少し上回る
+const LOB_DMG_MUL = 2.2;
 // 歩行メカの炸薬パンチ:届く距離(自分と相手の半径の外側)・威力・次に殴れるまで
 const PUNCH_REACH = 2.6;
 const PUNCH_DMG = 75;
@@ -617,7 +619,7 @@ export class Sim {
     const c = Math.cos(LOB_ANGLE), s = Math.sin(LOB_ANGLE);
     const yaw = (e.lobYaw ?? o.yaw) + (this.rnd() - 0.5) * 0.02;
     const vv = v * (1 + (this.rnd() - 0.5) * 0.02);
-    this.spawnShot({ kind: 'lob', x: e.x, y: e.y + 3, z: e.z, vx: Math.sin(yaw) * c * vv, vy: s * vv, vz: Math.cos(yaw) * c * vv, g: LOB_G / G, team: e.team, owner: e.id, dmg: e.spec.dmg * 1.1, splash: 6, lob: true, life: 10, prox: true });
+    this.spawnShot({ kind: 'lob', x: e.x, y: e.y + 3, z: e.z, vx: Math.sin(yaw) * c * vv, vy: s * vv, vz: Math.cos(yaw) * c * vv, g: LOB_G / G, team: e.team, owner: e.id, dmg: e.spec.dmg * LOB_DMG_MUL, splash: 6, lob: true, life: 10, prox: true });
     // 曲射は 2 発ぶんを使う(2 発とも装填し直す)
     e.reload = shellReload(e);
     e.ammo = 0;
