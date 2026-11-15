@@ -382,3 +382,17 @@ test('歩行メカ:主砲のボタンで、拳の届く所の敵は炸薬パン�
   assert.ok(!ev2.some((e) => e.t === 'punch'));
   assert.ok(ev2.some((e) => e.t === 'fire' && e.kind === 'cannon'));
 });
+
+test('ボス:遠くから撃たれたら目を覚まし、遠い相手にはミサイルを撃つ(眠ったまま一方的に倒されない)', () => {
+  const i = STAGE_INFO.findIndex((s) => s.id === '2-B');
+  const sim = new Sim(campaignStage(i), { seed: 1, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  run(sim, 4);
+  const b = sim.ents.find((e) => e.type === 'boss');
+  assert.equal(b.ai.state, 'sleep', 'スタート地点では眠っている');
+  const knee = b.parts.find((p) => p.knee);
+  sim.damagePart(b, knee, { dmg: 10, x: b.x, y: 4, z: b.z, owner: 'p1' });
+  assert.notEqual(b.ai.state, 'sleep', '撃たれたら起きる');
+  let missiles = 0;
+  for (let k = 0; k < 60 * 3; k++) { sim.step(1 / 60, new Map([['p1', {}]])); missiles += sim.events.filter((e) => e.t === 'fire' && e.id === b.id && e.kind === 'missile').length; sim.events.length = 0; }
+  assert.ok(missiles >= 3, `ミサイル ${missiles}`);
+});
