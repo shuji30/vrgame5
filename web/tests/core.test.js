@@ -412,3 +412,16 @@ test('曲射:車体が立ち上がる前に主砲を押しても、立った時�
   }
   assert.equal(lobs, 1);
 });
+
+test('大型砲台:110m 先から撃たれても撃ち返す(射程 150m)', () => {
+  const i = STAGE_INFO.findIndex((s) => s.id === '1-1');
+  const sim = new Sim(campaignStage(i), { seed: 2, players: [{ id: 'p1', vehicle: 'medium', ctrl: 'local' }] });
+  run(sim, 8);
+  const me = sim.byId.get('p1');
+  const T = sim.ents.find((e) => e.type === 'bigTurret' && e.x > 0);
+  me.x = T.x + Math.sin(T.yaw + 0.3) * 110; me.z = T.z + Math.cos(T.yaw + 0.3) * 110; me.invuln = 1e9;
+  sim.damage(T, 5, { team: 0, owner: 'p1', x: me.x, z: me.z }); // 撃たれて起きる
+  let shots = 0;
+  for (let k = 0; k < 60 * 10; k++) { sim.step(1 / 60, new Map([['p1', {}]])); shots += sim.events.filter((e) => e.t === 'fire' && e.id === T.id).length; sim.events.length = 0; }
+  assert.ok(shots >= 2, `撃ち返さない ${shots}`);
+});
